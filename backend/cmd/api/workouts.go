@@ -21,8 +21,24 @@ func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Reques
 
 	workout := data.Workout{
 		ID:        id,
+		Title:     "Tommy V",
+		Mode:      "For Time",
+		Equipment: []string{"barbell, rope"},
+		Exercises: []string{
+			"21 thrusters",
+			"12 rope climbs, 15 ft",
+			"15 thrusters",
+			"9 rope climbs, 15 ft",
+			"9 thrusters",
+			"6 rope climbs, 15 ft",
+		},
 		CreatedAt: time.Now(),
-		Title:     "Fran",
+		UpdatedAt: time.Now(),
+		TrainerTips: []string{
+			"Split the 21 thrusters as needed",
+			"Try to do the 9 and 6 thrusters unbroken",
+			"RX Weights: 115lb/75lb",
+		},
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"workout": workout}, nil)
