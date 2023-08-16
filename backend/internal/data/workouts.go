@@ -5,7 +5,7 @@ import "time"
 type Workout struct {
 	ID          int64     `json:"id"`
 	Title       string    `json:"title"`
-	Mode        string    `json:"mode,omitempty"`
+	Mode        string    `json:"mode"`
 	Equipment   []string  `json:"equipment"`
 	Exercises   []string  `json:"exercises"`
 	CreatedAt   time.Time `json:"created_at"`
