@@ -15,7 +15,7 @@ func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Requ
 func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
-		http.NotFound(w, r)
+		app.notFoundResponse(w, r)
 		return
 	}
 
@@ -27,7 +27,6 @@ func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Reques
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"workout": workout}, nil)
 	if err != nil {
-		app.logger.Print(err)
-		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+		app.serveErrorResponse(w, r, err)
 	}
 }
