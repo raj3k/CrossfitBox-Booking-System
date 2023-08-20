@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"crossfitbox.booking.system/internal/data"
+	"crossfitbox.booking.system/internal/validator"
 )
 
 func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +22,22 @@ func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Requ
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	workout := &data.Workout{
+		Title:       input.Title,
+		Mode:        input.Mode,
+		TimeCap:     input.TimeCap,
+		Equipment:   input.Equipment,
+		Exercises:   input.Exercises,
+		TrainerTips: input.TrainerTips,
+	}
+
+	v := validator.New()
+
+	if data.ValidateWorkout(v, workout); !v.Valid() {
+		app.failedValidationErrors(w, r, v.Errors)
 		return
 	}
 
