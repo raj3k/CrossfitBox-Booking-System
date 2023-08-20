@@ -9,7 +9,22 @@ import (
 )
 
 func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "create a workout")
+	var input struct {
+		Title       string       `json:"title"`
+		Mode        string       `json:"mode"`
+		TimeCap     data.TimeCap `json:"time_cap"`
+		Equipment   []string     `json:"equipment"`
+		Exercises   []string     `json:"exercises"`
+		TrainerTips []string     `json:"trainer_tips"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	fmt.Fprintf(w, "%v\n", input)
 }
 
 func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Request) {
