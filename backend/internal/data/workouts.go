@@ -24,7 +24,9 @@ func ValidateWorkout(v *validator.Validator, workout *Workout) {
 
 	v.Check(workout.Mode != "", "mode", "must be provided")
 
-	v.Check(workout.TimeCap > 0, "time_cap", "must be a positive integer")
+	if workout.TimeCap != 0 {
+		v.Check(workout.TimeCap > 0, "time_cap", "must be a positive integer")
+	}
 
 	v.Check(workout.Exercises != nil, "exercises", "must be provided")
 	v.Check(len(workout.Exercises) >= 1, "exercises", "must contain at least 1 exercise")

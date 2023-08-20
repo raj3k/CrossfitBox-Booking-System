@@ -56,6 +56,7 @@ func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Reques
 		Title:     "Tommy V",
 		Mode:      "For Time",
 		Equipment: []string{"barbell, rope"},
+		TimeCap:   14,
 		Exercises: []string{
 			"21 thrusters",
 			"12 rope climbs, 15 ft",
