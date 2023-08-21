@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS workouts(
-    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    id bigserial NOT NULL PRIMARY KEY,
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     title text NOT NULL,

@@ -4,19 +4,18 @@ import (
 	"time"
 
 	"crossfitbox.booking.system/internal/validator"
-	"github.com/google/uuid"
 )
 
 type Workout struct {
-	ID          *uuid.UUID `json:"id"`
-	Title       string     `json:"title"`
-	Mode        string     `json:"mode"`
-	TimeCap     TimeCap    `json:"time_cap,omitempty"`
-	Equipment   []string   `json:"equipment,omitempty"`
-	Exercises   []string   `json:"exercises"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	TrainerTips []string   `json:"trainer_tips,omitempty"`
+	ID          int64     `json:"id"`
+	Title       string    `json:"title"`
+	Mode        string    `json:"mode"`
+	TimeCap     TimeCap   `json:"time_cap,omitempty"`
+	Equipment   []string  `json:"equipment,omitempty"`
+	Exercises   []string  `json:"exercises"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	TrainerTips []string  `json:"trainer_tips,omitempty"`
 }
 
 func ValidateWorkout(v *validator.Validator, workout *Workout) {
