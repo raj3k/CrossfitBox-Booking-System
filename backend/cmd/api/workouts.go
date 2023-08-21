@@ -41,7 +41,21 @@ func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	fmt.Fprintf(w, "%v\n", input)
+	err = app.models.Workouts.Insert(workout)
+	if err != nil {
+		// TODO: handle error "pq: duplicate key value violates unique constraint "workouts_title_key""
+		// app.serveErrorResponse(w, r, err)
+		app.conflictResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/workouts/%d", workout.ID))
+
+	app.writeJSON(w, http.StatusCreated, envelope{"workout": workout}, headers)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+	}
 }
 
 func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +64,8 @@ func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Reques
 		app.notFoundResponse(w, r)
 		return
 	}
+
+	app.logger.Print(app.models.Workouts.Get(id))
 
 	workout := data.Workout{
 		ID:        id,
