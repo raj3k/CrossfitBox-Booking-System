@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrRecordNotFound = errors.New("record not found")
+	ErrDuplicateTitle = errors.New("duplicate title")
 )
 
 type Models struct {

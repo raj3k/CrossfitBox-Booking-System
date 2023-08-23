@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"crossfitbox.booking.system/internal/data"
 	"crossfitbox.booking.system/internal/validator"
@@ -43,9 +43,13 @@ func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Requ
 
 	err = app.models.Workouts.Insert(workout)
 	if err != nil {
-		// TODO: handle error "pq: duplicate key value violates unique constraint "workouts_title_key""
-		// app.serveErrorResponse(w, r, err)
-		app.conflictResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrDuplicateTitle):
+			v.AddError("title", "Workout with this title already exists")
+			app.failedValidationErrors(w, r, v.Errors)
+		default:
+			app.serveErrorResponse(w, r, err)
+		}
 		return
 	}
 
@@ -65,29 +69,15 @@ func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	app.logger.Print(app.models.Workouts.Get(id))
-
-	workout := data.Workout{
-		ID:        id,
-		Title:     "Tommy V",
-		Mode:      "For Time",
-		Equipment: []string{"barbell, rope"},
-		TimeCap:   14,
-		Exercises: []string{
-			"21 thrusters",
-			"12 rope climbs, 15 ft",
-			"15 thrusters",
-			"9 rope climbs, 15 ft",
-			"9 thrusters",
-			"6 rope climbs, 15 ft",
-		},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		TrainerTips: []string{
-			"Split the 21 thrusters as needed",
-			"Try to do the 9 and 6 thrusters unbroken",
-			"RX Weights: 115lb/75lb",
-		},
+	workout, err := app.models.Workouts.Get(*id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serveErrorResponse(w, r, err)
+		}
+		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"workout": workout}, nil)

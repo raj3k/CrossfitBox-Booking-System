@@ -2,9 +2,11 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"crossfitbox.booking.system/internal/validator"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -13,6 +15,11 @@ type WorkoutModel struct {
 }
 
 func (w WorkoutModel) Insert(workout *Workout) error {
+	tx, err := w.DB.Begin()
+	if err != nil {
+		return err
+	}
+
 	query := `
 		INSERT INTO workouts (title, mode, time_cap, equipment, exercises, trainer_tips)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -27,12 +34,52 @@ func (w WorkoutModel) Insert(workout *Workout) error {
 		pq.Array(workout.TrainerTips),
 	}
 
-	return w.DB.QueryRow(query, args...).Scan(&workout.ID, &workout.UpdatedAt, &workout.CreatedAt)
-
+	err = tx.QueryRow(query, args...).
+		Scan(&workout.ID, &workout.UpdatedAt, &workout.CreatedAt)
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_title_key"`:
+			return ErrDuplicateTitle
+		case errors.Is(err, rollbackErr):
+			return errors.New("rollback error")
+		default:
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
-func (w WorkoutModel) Get(id int64) (*Workout, error) {
-	return nil, nil
+func (w WorkoutModel) Get(id uuid.UUID) (*Workout, error) {
+	query := `
+	SELECT id, title, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
+	FROM workouts
+	WHERE id = $1`
+
+	var workout Workout
+
+	err := w.DB.QueryRow(query, id).Scan(
+		&workout.ID,
+		&workout.Title,
+		&workout.Mode,
+		&workout.TimeCap,
+		pq.Array(&workout.Equipment),
+		pq.Array(&workout.Exercises),
+		pq.Array(&workout.TrainerTips),
+		&workout.CreatedAt,
+		&workout.UpdatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &workout, nil
 }
 
 func (w WorkoutModel) Update(workout *Workout) error {
@@ -44,7 +91,7 @@ func (w WorkoutModel) Delete(id int64) error {
 }
 
 type Workout struct {
-	ID          int64     `json:"id"`
+	ID          uuid.UUID `json:"id"`
 	Title       string    `json:"title"`
 	Mode        string    `json:"mode"`
 	TimeCap     TimeCap   `json:"time_cap,omitempty"`
