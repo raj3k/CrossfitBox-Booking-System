@@ -83,7 +83,21 @@ func (w WorkoutModel) Get(id uuid.UUID) (*Workout, error) {
 }
 
 func (w WorkoutModel) Update(workout *Workout) error {
-	return nil
+	query := `
+		UPDATE workouts
+		SET title = $1, mode = $2, time_cap = $3, equipment = $4, exercises = $5, trainer_tips = $6, updated_at = NOW()
+		WHERE id = $7
+		RETURNING id, updated_at`
+	args := []interface{}{
+		workout.Title,
+		workout.Mode,
+		workout.TimeCap,
+		pq.Array(workout.Equipment),
+		pq.Array(workout.Exercises),
+		pq.Array(workout.TrainerTips),
+		workout.ID,
+	}
+	return w.DB.QueryRow(query, args...).Scan(&workout.ID, &workout.UpdatedAt)
 }
 
 func (w WorkoutModel) Delete(id int64) error {

@@ -85,3 +85,63 @@ func (app *application) showWorkoutHandler(w http.ResponseWriter, r *http.Reques
 		app.serveErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	workout, err := app.models.Workouts.Get(*id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serveErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	var input struct {
+		Title       string       `json:"title"`
+		Mode        string       `json:"mode"`
+		TimeCap     data.TimeCap `json:"time_cap"`
+		Equipment   []string     `json:"equipment"`
+		Exercises   []string     `json:"exercises"`
+		TrainerTips []string     `json:"trainer_tips"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	workout.Title = input.Title
+	workout.Mode = input.Mode
+	workout.TimeCap = input.TimeCap
+	workout.Equipment = input.Equipment
+	workout.Exercises = input.Exercises
+	workout.TrainerTips = input.TrainerTips
+
+	v := validator.New()
+
+	if data.ValidateWorkout(v, workout); !v.Valid() {
+		// TODO: currently not validating for duplicate titles
+		app.failedValidationErrors(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Workouts.Update(workout)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"workout": workout}, nil)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+	}
+}
