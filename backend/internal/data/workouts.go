@@ -15,11 +15,6 @@ type WorkoutModel struct {
 }
 
 func (w WorkoutModel) Insert(workout *Workout) error {
-	tx, err := w.DB.Begin()
-	if err != nil {
-		return err
-	}
-
 	query := `
 		INSERT INTO workouts (title, mode, time_cap, equipment, exercises, trainer_tips)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -34,20 +29,17 @@ func (w WorkoutModel) Insert(workout *Workout) error {
 		pq.Array(workout.TrainerTips),
 	}
 
-	err = tx.QueryRow(query, args...).
+	err := w.DB.QueryRow(query, args...).
 		Scan(&workout.ID, &workout.UpdatedAt, &workout.CreatedAt)
 	if err != nil {
-		rollbackErr := tx.Rollback()
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_title_key"`:
 			return ErrDuplicateTitle
-		case errors.Is(err, rollbackErr):
-			return errors.New("rollback error")
 		default:
 			return err
 		}
 	}
-	return tx.Commit()
+	return nil
 }
 
 func (w WorkoutModel) Get(id uuid.UUID) (*Workout, error) {
@@ -97,7 +89,16 @@ func (w WorkoutModel) Update(workout *Workout) error {
 		pq.Array(workout.TrainerTips),
 		workout.ID,
 	}
-	return w.DB.QueryRow(query, args...).Scan(&workout.ID, &workout.UpdatedAt)
+	err := w.DB.QueryRow(query, args...).Scan(&workout.ID, &workout.UpdatedAt)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_title_key"`:
+			return ErrDuplicateTitle
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (w WorkoutModel) Delete(id int64) error {

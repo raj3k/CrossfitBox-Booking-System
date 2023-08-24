@@ -129,14 +129,19 @@ func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Requ
 	v := validator.New()
 
 	if data.ValidateWorkout(v, workout); !v.Valid() {
-		// TODO: currently not validating for duplicate titles
 		app.failedValidationErrors(w, r, v.Errors)
 		return
 	}
 
 	err = app.models.Workouts.Update(workout)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrDuplicateTitle):
+			v.AddError("title", "Workout with this title already exists")
+			app.failedValidationErrors(w, r, v.Errors)
+		default:
+			app.serveErrorResponse(w, r, err)
+		}
 		return
 	}
 
