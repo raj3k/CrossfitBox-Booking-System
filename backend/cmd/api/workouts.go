@@ -105,12 +105,12 @@ func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	var input struct {
-		Title       string       `json:"title"`
-		Mode        string       `json:"mode"`
-		TimeCap     data.TimeCap `json:"time_cap"`
-		Equipment   []string     `json:"equipment"`
-		Exercises   []string     `json:"exercises"`
-		TrainerTips []string     `json:"trainer_tips"`
+		Title       *string       `json:"title"`
+		Mode        *string       `json:"mode"`
+		TimeCap     *data.TimeCap `json:"time_cap"`
+		Equipment   []string      `json:"equipment"`
+		Exercises   []string      `json:"exercises"`
+		TrainerTips []string      `json:"trainer_tips"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -119,12 +119,29 @@ func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	workout.Title = input.Title
-	workout.Mode = input.Mode
-	workout.TimeCap = input.TimeCap
-	workout.Equipment = input.Equipment
-	workout.Exercises = input.Exercises
-	workout.TrainerTips = input.TrainerTips
+	if input.Title != nil {
+		workout.Title = *input.Title
+	}
+
+	if input.Mode != nil {
+		workout.Mode = *input.Mode
+	}
+
+	if input.TimeCap != nil {
+		workout.TimeCap = *input.TimeCap
+	}
+
+	if input.Equipment != nil {
+		workout.Equipment = input.Equipment
+	}
+
+	if input.Exercises != nil {
+		workout.Exercises = input.Exercises
+	}
+
+	if input.TrainerTips != nil {
+		workout.TrainerTips = input.TrainerTips
+	}
 
 	v := validator.New()
 
