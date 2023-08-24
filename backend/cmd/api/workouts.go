@@ -150,3 +150,27 @@ func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Requ
 		app.serveErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) deleteWorkoutHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	err = app.models.Workouts.Delete(*id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serveErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusNoContent, nil, nil)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+	}
+}

@@ -7,7 +7,6 @@ import (
 )
 
 func (app *application) routes() *httprouter.Router {
-	// Initialize a new httprouter router instance.
 	router := httprouter.New()
 
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
@@ -18,6 +17,7 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodPost, "/v1/workouts", app.createWorkoutHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/workouts/:id", app.showWorkoutHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/workouts/:id", app.updateWorkoutHandler)
+	router.HandlerFunc(http.MethodDelete, "/v1/workouts/:id", app.deleteWorkoutHandler)
 
 	return router
 }

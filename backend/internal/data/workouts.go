@@ -101,7 +101,22 @@ func (w WorkoutModel) Update(workout *Workout) error {
 	return nil
 }
 
-func (w WorkoutModel) Delete(id int64) error {
+func (w WorkoutModel) Delete(id uuid.UUID) error {
+	query := `DELETE FROM workouts WHERE id = $1`
+
+	result, err := w.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
 	return nil
 }
 
