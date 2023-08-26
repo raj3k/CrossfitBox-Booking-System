@@ -11,7 +11,7 @@ import (
 
 func (app *application) listWorkoutsHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title     string
+		Name      string
 		Mode      string
 		Equipment []string
 		data.Filters
@@ -21,21 +21,21 @@ func (app *application) listWorkoutsHandler(w http.ResponseWriter, r *http.Reque
 
 	qs := r.URL.Query()
 
-	input.Title = app.readString(qs, "title", "")
+	input.Name = app.readString(qs, "name", "")
 	input.Mode = app.readString(qs, "mode", "")
 	input.Equipment = app.readCSV(qs, "equipment", []string{})
 	input.Filters.Page = app.readInt(qs, "page", 1, v)
 	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 	input.Filters.Sort = app.readString(qs, "sort", "id")
 
-	input.Filters.SortSafelist = []string{"id", "title", "mode", "created_at", "-id", "-title", "-mode", "-created_at"}
+	input.Filters.SortSafelist = []string{"id", "name", "mode", "created_at", "-id", "-name", "-mode", "-created_at"}
 
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationErrors(w, r, v.Errors)
 		return
 	}
 
-	workouts, err := app.models.Workouts.GetAll(input.Title, input.Mode, input.Equipment, input.Filters)
+	workouts, err := app.models.Workouts.GetAll(input.Name, input.Mode, input.Equipment, input.Filters)
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
 		return
@@ -49,7 +49,7 @@ func (app *application) listWorkoutsHandler(w http.ResponseWriter, r *http.Reque
 
 func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title       string       `json:"title"`
+		Name        string       `json:"name"`
 		Mode        string       `json:"mode"`
 		TimeCap     data.TimeCap `json:"time_cap"`
 		Equipment   []string     `json:"equipment"`
@@ -64,7 +64,7 @@ func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	workout := &data.Workout{
-		Title:       input.Title,
+		Name:        input.Name,
 		Mode:        input.Mode,
 		TimeCap:     input.TimeCap,
 		Equipment:   input.Equipment,
@@ -82,8 +82,8 @@ func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Requ
 	err = app.models.Workouts.Insert(workout)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrDuplicateTitle):
-			v.AddError("title", "Workout with this title already exists")
+		case errors.Is(err, data.ErrDuplicateName):
+			v.AddError("name", "Workout with this name already exists")
 			app.failedValidationErrors(w, r, v.Errors)
 		default:
 			app.serveErrorResponse(w, r, err)
@@ -143,7 +143,7 @@ func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	var input struct {
-		Title       *string       `json:"title"`
+		Name        *string       `json:"name"`
 		Mode        *string       `json:"mode"`
 		TimeCap     *data.TimeCap `json:"time_cap"`
 		Equipment   []string      `json:"equipment"`
@@ -157,8 +157,8 @@ func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if input.Title != nil {
-		workout.Title = *input.Title
+	if input.Name != nil {
+		workout.Name = *input.Name
 	}
 
 	if input.Mode != nil {
@@ -191,8 +191,8 @@ func (app *application) updateWorkoutHandler(w http.ResponseWriter, r *http.Requ
 	err = app.models.Workouts.Update(workout)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrDuplicateTitle):
-			v.AddError("title", "Workout with this title already exists")
+		case errors.Is(err, data.ErrDuplicateName):
+			v.AddError("name", "Workout with this name already exists")
 			app.failedValidationErrors(w, r, v.Errors)
 		default:
 			app.serveErrorResponse(w, r, err)

@@ -17,12 +17,12 @@ type WorkoutModel struct {
 
 func (w WorkoutModel) Insert(workout *Workout) error {
 	query := `
-		INSERT INTO workouts (title, mode, time_cap, equipment, exercises, trainer_tips)
+		INSERT INTO workouts (name, mode, time_cap, equipment, exercises, trainer_tips)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, updated_at, created_at`
 
 	args := []interface{}{
-		workout.Title,
+		workout.Name,
 		workout.Mode,
 		workout.TimeCap,
 		pq.Array(workout.Equipment),
@@ -38,8 +38,8 @@ func (w WorkoutModel) Insert(workout *Workout) error {
 		Scan(&workout.ID, &workout.UpdatedAt, &workout.CreatedAt)
 	if err != nil {
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_title_key"`:
-			return ErrDuplicateTitle
+		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_name_key"`:
+			return ErrDuplicateName
 		default:
 			return err
 		}
@@ -49,7 +49,7 @@ func (w WorkoutModel) Insert(workout *Workout) error {
 
 func (w WorkoutModel) Get(id uuid.UUID) (*Workout, error) {
 	query := `
-	SELECT id, title, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
+	SELECT id, name, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
 	FROM workouts
 	WHERE id = $1`
 
@@ -61,7 +61,7 @@ func (w WorkoutModel) Get(id uuid.UUID) (*Workout, error) {
 
 	err := w.DB.QueryRowContext(ctx, query, id).Scan(
 		&workout.ID,
-		&workout.Title,
+		&workout.Name,
 		&workout.Mode,
 		&workout.TimeCap,
 		pq.Array(&workout.Equipment),
@@ -86,11 +86,11 @@ func (w WorkoutModel) Get(id uuid.UUID) (*Workout, error) {
 func (w WorkoutModel) Update(workout *Workout) error {
 	query := `
 		UPDATE workouts
-		SET title = $1, mode = $2, time_cap = $3, equipment = $4, exercises = $5, trainer_tips = $6, updated_at = NOW()
+		SET name = $1, mode = $2, time_cap = $3, equipment = $4, exercises = $5, trainer_tips = $6, updated_at = NOW()
 		WHERE id = $7
 		RETURNING id, updated_at`
 	args := []interface{}{
-		workout.Title,
+		workout.Name,
 		workout.Mode,
 		workout.TimeCap,
 		pq.Array(workout.Equipment),
@@ -106,8 +106,8 @@ func (w WorkoutModel) Update(workout *Workout) error {
 	err := w.DB.QueryRowContext(ctx, query, args...).Scan(&workout.ID, &workout.UpdatedAt)
 	if err != nil {
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_title_key"`:
-			return ErrDuplicateTitle
+		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_name_key"`:
+			return ErrDuplicateName
 		default:
 			return err
 		}
@@ -138,11 +138,11 @@ func (w WorkoutModel) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (w WorkoutModel) GetAll(title, mode string, equipment []string, filters Filters) ([]*Workout, error) {
+func (w WorkoutModel) GetAll(name, mode string, equipment []string, filters Filters) ([]*Workout, error) {
 	query := `
-	SELECT id, title, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
+	SELECT id, name, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
 	FROM workouts
-	WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+	WHERE (LOWER(name) = LOWER($1) OR $1 = '')
 	AND (LOWER(mode) = LOWER($2) OR $2 = '')
 	AND (equipment @> $3 OR $3 = '{}')
 	ORDER BY id`
@@ -151,7 +151,7 @@ func (w WorkoutModel) GetAll(title, mode string, equipment []string, filters Fil
 
 	defer cancel()
 
-	rows, err := w.DB.QueryContext(ctx, query, title, mode, pq.Array(equipment))
+	rows, err := w.DB.QueryContext(ctx, query, name, mode, pq.Array(equipment))
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (w WorkoutModel) GetAll(title, mode string, equipment []string, filters Fil
 
 		err := rows.Scan(
 			&workout.ID,
-			&workout.Title,
+			&workout.Name,
 			&workout.Mode,
 			&workout.TimeCap,
 			pq.Array(&workout.Equipment),
@@ -190,7 +190,7 @@ func (w WorkoutModel) GetAll(title, mode string, equipment []string, filters Fil
 
 type Workout struct {
 	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
+	Name        string    `json:"name"`
 	Mode        string    `json:"mode"`
 	TimeCap     TimeCap   `json:"time_cap,omitempty"`
 	Equipment   []string  `json:"equipment,omitempty"`
@@ -201,8 +201,8 @@ type Workout struct {
 }
 
 func ValidateWorkout(v *validator.Validator, workout *Workout) {
-	v.Check(workout.Title != "", "title", "must be provided")
-	v.Check(len(workout.Title) <= 500, "title", "must not be more than 500 bytes long")
+	v.Check(workout.Name != "", "name", "must be provided")
+	v.Check(len(workout.Name) <= 500, "name", "must not be more than 500 bytes long")
 
 	v.Check(workout.Mode != "", "mode", "must be provided")
 
