@@ -35,7 +35,16 @@ func (app *application) listWorkoutsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	fmt.Fprintf(w, "%+v\n", input)
+	workouts, err := app.models.Workouts.GetAll(input.Title, input.Mode, input.Equipment, input.Filters)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"workouts": workouts}, nil)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+	}
 }
 
 func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Request) {

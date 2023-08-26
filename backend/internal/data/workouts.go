@@ -138,6 +138,56 @@ func (w WorkoutModel) Delete(id uuid.UUID) error {
 	return nil
 }
 
+func (w WorkoutModel) GetAll(title, mode string, equipment []string, filters Filters) ([]*Workout, error) {
+	query := `
+	SELECT id, title, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
+	FROM workouts
+	WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+	AND (LOWER(mode) = LOWER($2) OR $2 = '')
+	AND (equipment @> $3 OR $3 = '{}')
+	ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	rows, err := w.DB.QueryContext(ctx, query, title, mode, pq.Array(equipment))
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	workouts := []*Workout{}
+
+	for rows.Next() {
+		var workout Workout
+
+		err := rows.Scan(
+			&workout.ID,
+			&workout.Title,
+			&workout.Mode,
+			&workout.TimeCap,
+			pq.Array(&workout.Equipment),
+			pq.Array(&workout.Exercises),
+			pq.Array(&workout.TrainerTips),
+			&workout.CreatedAt,
+			&workout.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		workouts = append(workouts, &workout)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return workouts, nil
+}
+
 type Workout struct {
 	ID          uuid.UUID `json:"id"`
 	Title       string    `json:"title"`
