@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -29,7 +30,11 @@ func (w WorkoutModel) Insert(workout *Workout) error {
 		pq.Array(workout.TrainerTips),
 	}
 
-	err := w.DB.QueryRow(query, args...).
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := w.DB.QueryRowContext(ctx, query, args...).
 		Scan(&workout.ID, &workout.UpdatedAt, &workout.CreatedAt)
 	if err != nil {
 		switch {
@@ -50,7 +55,11 @@ func (w WorkoutModel) Get(id uuid.UUID) (*Workout, error) {
 
 	var workout Workout
 
-	err := w.DB.QueryRow(query, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := w.DB.QueryRowContext(ctx, query, id).Scan(
 		&workout.ID,
 		&workout.Title,
 		&workout.Mode,
@@ -89,7 +98,12 @@ func (w WorkoutModel) Update(workout *Workout) error {
 		pq.Array(workout.TrainerTips),
 		workout.ID,
 	}
-	err := w.DB.QueryRow(query, args...).Scan(&workout.ID, &workout.UpdatedAt)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := w.DB.QueryRowContext(ctx, query, args...).Scan(&workout.ID, &workout.UpdatedAt)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "workouts_title_key"`:
@@ -104,7 +118,11 @@ func (w WorkoutModel) Update(workout *Workout) error {
 func (w WorkoutModel) Delete(id uuid.UUID) error {
 	query := `DELETE FROM workouts WHERE id = $1`
 
-	result, err := w.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	result, err := w.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
