@@ -11,5 +11,3 @@ CREATE TABLE IF NOT EXISTS workouts(
 );
 
 ALTER TABLE workouts ADD CONSTRAINT time_cap_check CHECK (time_cap >= 0);
-
-CREATE INDEX IF NOT EXISTS workouts_id_name_mode_indx ON workouts (id, name, mode);
