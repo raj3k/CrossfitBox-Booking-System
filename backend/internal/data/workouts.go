@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"crossfitbox.booking.system/internal/validator"
@@ -151,13 +152,13 @@ func (w WorkoutModel) Delete(id uuid.UUID) error {
 }
 
 func (w WorkoutModel) GetAll(name, mode string, equipment []string, filters Filters) ([]*Workout, error) {
-	query := `
+	query := fmt.Sprintf(`
 	SELECT id, name, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
 	FROM workouts
 	WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')
 	AND (LOWER(mode) = LOWER($2) OR $2 = '')
 	AND (equipment @> $3 OR $3 = '{}')
-	ORDER BY id`
+	ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
