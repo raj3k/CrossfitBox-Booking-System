@@ -9,6 +9,35 @@ import (
 	"crossfitbox.booking.system/internal/validator"
 )
 
+func (app *application) listWorkoutsHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title     string
+		Mode      string
+		Equipment []string
+		Page      int
+		PageSize  int
+		Sort      string
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = app.readString(qs, "title", "")
+	input.Mode = app.readString(qs, "mode", "")
+	input.Equipment = app.readCSV(qs, "equipment", []string{})
+	input.Page = app.readInt(qs, "page", 1, v)
+	input.PageSize = app.readInt(qs, "page_size", 20, v)
+	input.Sort = app.readString(qs, "sort", "id")
+
+	if !v.Valid() {
+		app.failedValidationErrors(w, r, v.Errors)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
+}
+
 func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Title       string       `json:"title"`
