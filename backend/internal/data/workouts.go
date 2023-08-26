@@ -15,6 +15,18 @@ type WorkoutModel struct {
 	DB *sql.DB
 }
 
+type Workout struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Mode        string    `json:"mode"`
+	TimeCap     TimeCap   `json:"time_cap,omitempty"`
+	Equipment   []string  `json:"equipment,omitempty"`
+	Exercises   []string  `json:"exercises"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	TrainerTips []string  `json:"trainer_tips,omitempty"`
+}
+
 func (w WorkoutModel) Insert(workout *Workout) error {
 	query := `
 		INSERT INTO workouts (name, mode, time_cap, equipment, exercises, trainer_tips)
@@ -142,7 +154,7 @@ func (w WorkoutModel) GetAll(name, mode string, equipment []string, filters Filt
 	query := `
 	SELECT id, name, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
 	FROM workouts
-	WHERE (LOWER(name) = LOWER($1) OR $1 = '')
+	WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')
 	AND (LOWER(mode) = LOWER($2) OR $2 = '')
 	AND (equipment @> $3 OR $3 = '{}')
 	ORDER BY id`
@@ -186,18 +198,6 @@ func (w WorkoutModel) GetAll(name, mode string, equipment []string, filters Filt
 	}
 
 	return workouts, nil
-}
-
-type Workout struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Mode        string    `json:"mode"`
-	TimeCap     TimeCap   `json:"time_cap,omitempty"`
-	Equipment   []string  `json:"equipment,omitempty"`
-	Exercises   []string  `json:"exercises"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	TrainerTips []string  `json:"trainer_tips,omitempty"`
 }
 
 func ValidateWorkout(v *validator.Validator, workout *Workout) {
