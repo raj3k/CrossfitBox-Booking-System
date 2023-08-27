@@ -151,32 +151,37 @@ func (w WorkoutModel) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (w WorkoutModel) GetAll(name, mode string, equipment []string, filters Filters) ([]*Workout, error) {
+func (w WorkoutModel) GetAll(name, mode string, equipment []string, filters Filters) ([]*Workout, Metadata, error) {
 	query := fmt.Sprintf(`
-	SELECT id, name, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
+	SELECT count(*) OVER(), id, name, mode, time_cap, equipment, exercises, trainer_tips, created_at, updated_at
 	FROM workouts
 	WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')
 	AND (LOWER(mode) = LOWER($2) OR $2 = '')
 	AND (equipment @> $3 OR $3 = '{}')
-	ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
+	ORDER BY %s %s, id ASC
+	LIMIT $4 OFFSET $5`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
 	defer cancel()
 
-	rows, err := w.DB.QueryContext(ctx, query, name, mode, pq.Array(equipment))
+	args := []interface{}{name, mode, pq.Array(equipment), filters.limit(), filters.offset()}
+
+	rows, err := w.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
 
+	totalRecords := 0
 	workouts := []*Workout{}
 
 	for rows.Next() {
 		var workout Workout
 
 		err := rows.Scan(
+			&totalRecords,
 			&workout.ID,
 			&workout.Name,
 			&workout.Mode,
@@ -188,17 +193,19 @@ func (w WorkoutModel) GetAll(name, mode string, equipment []string, filters Filt
 			&workout.UpdatedAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 
 		workouts = append(workouts, &workout)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
-	return workouts, nil
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return workouts, metadata, nil
 }
 
 func ValidateWorkout(v *validator.Validator, workout *Workout) {

@@ -35,13 +35,13 @@ func (app *application) listWorkoutsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	workouts, err := app.models.Workouts.GetAll(input.Name, input.Mode, input.Equipment, input.Filters)
+	workouts, metadata, err := app.models.Workouts.GetAll(input.Name, input.Mode, input.Equipment, input.Filters)
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"workouts": workouts}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"workouts": workouts, "metadata": metadata}, nil)
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
 	}
