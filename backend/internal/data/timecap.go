@@ -8,7 +8,7 @@ import (
 
 var ErrInvalidTimeCapFormat = errors.New("invalid TimeCap format")
 
-type TimeCap int32
+type TimeCap uint8
 
 func (tc *TimeCap) UnmarshalJSON(jsonValue []byte) error {
 	unqoutedJSONValue, err := strconv.Unquote(string(jsonValue))
