@@ -8,6 +8,7 @@ import (
 
 	"crossfitbox.booking.system/internal/data"
 	"crossfitbox.booking.system/internal/jsonlog"
+	"crossfitbox.booking.system/internal/mailer"
 	_ "github.com/lib/pq"
 )
 
@@ -22,12 +23,20 @@ type config struct {
 		maxIdleConns int
 		maxIdleTime  string
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type application struct {
 	config config
 	logger *jsonlog.Logger
 	models data.Models
+	mailer mailer.Mailer
 }
 
 func main() {
@@ -51,6 +60,7 @@ func main() {
 		config: *cfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
 	err = app.serve()
