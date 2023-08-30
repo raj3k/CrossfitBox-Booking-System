@@ -21,5 +21,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/v1/workouts/:id", app.updateWorkoutHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/workouts/:id", app.deleteWorkoutHandler)
 
+	router.HandlerFunc(http.MethodPost, "/v1/users/register", app.registerUserHandler)
+
 	return app.recoverPanic(router)
 }
