@@ -10,6 +10,7 @@ import (
 	"crossfitbox.booking.system/internal/jsonlog"
 	"crossfitbox.booking.system/internal/mailer"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
 
 const version = "1.0.0"
@@ -30,13 +31,15 @@ type config struct {
 		password string
 		sender   string
 	}
+	redisURL string
 }
 
 type application struct {
-	config config
-	logger *jsonlog.Logger
-	models data.Models
-	mailer mailer.Mailer
+	config      config
+	logger      *jsonlog.Logger
+	models      data.Models
+	mailer      mailer.Mailer
+	redisClient *redis.Client
 }
 
 func main() {
@@ -56,11 +59,26 @@ func main() {
 
 	logger.PrintInfo("database connection pool established", nil)
 
+	// sdkConfig := aws.Config{
+	// 	Region: cfg.awsConfig.Region,
+	// 	Credentials: credentials.NewStaticCredentialsProvider(
+	// 		cfg.awsConfig.AccessKeyID, cfg.awsConfig.AccessKeySecret, "",
+	// 	),
+	// }
+
+	redisClient, err := openRedis(*cfg)
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
+
+	logger.PrintInfo("redis database connection established", nil)
+
 	app := &application{
-		config: *cfg,
-		logger: logger,
-		models: data.NewModels(db),
-		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+		config:      *cfg,
+		logger:      logger,
+		models:      data.NewModels(db),
+		mailer:      mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+		redisClient: redisClient,
 	}
 
 	err = app.serve()
@@ -92,4 +110,22 @@ func openDB(cfg config) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func openRedis(cfg config) (*redis.Client, error) {
+	opt, err := redis.ParseURL(cfg.redisURL)
+	if err != nil {
+		return nil, err
+	}
+
+	client := redis.NewClient(opt)
+
+	ctx := context.Background()
+
+	err = client.Ping(ctx).Err()
+	if err != nil {
+
+		return nil, err
+	}
+	return client, nil
 }

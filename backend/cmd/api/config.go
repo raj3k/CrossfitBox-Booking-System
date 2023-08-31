@@ -56,6 +56,9 @@ func updateConfigWithVariables() (*config, error) {
 	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("EMAIL_PASSWORD"), "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", os.Getenv("EMAIL_SENDER"), "SMTP sender")
 
+	// Redis config
+	flag.StringVar(&cfg.redisURL, "redis-url", os.Getenv("REDIS_URL"), "Redis URL")
+
 	flag.Parse()
 
 	return &cfg, nil
