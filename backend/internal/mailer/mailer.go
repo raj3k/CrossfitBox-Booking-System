@@ -99,9 +99,9 @@ const (
 )
 
 func (m Mailer) SendMailAWS(recipient string, data interface{}) error {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("eu-central-1")},
-	)
+	sess, err := session.NewSessionWithOptions(session.Options{
+		Profile: "cfbox-ses",
+	})
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,9 @@ func (m Mailer) SendMailAWS(recipient string, data interface{}) error {
 	TextBody := fmt.Sprintf(TextBodyTemplate, data.(*models.User).ID)
 
 	// Create an SES session.
-	svc := ses.New(sess)
+	svc := ses.New(sess, &aws.Config{
+		Region: aws.String("eu-central-1"),
+	})
 
 	// Assemble the email.
 	input := &ses.SendEmailInput{

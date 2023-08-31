@@ -67,7 +67,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			}
 		}()
 
-		err = app.mailer.SendMailAWS(user.Email, user)
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
 		if err != nil {
 			app.logger.PrintError(err, nil)
 		}
