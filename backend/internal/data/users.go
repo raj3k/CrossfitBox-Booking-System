@@ -232,6 +232,20 @@ func (um *UserModel) Update(user *User) error {
 	return tx.Commit()
 }
 
+func (um *UserModel) Activate(userID uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `UPDATE users SET is_active = true WHERE id = $1`
+
+	_, err := um.DB.ExecContext(ctx, query, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // The Set() method calculates the bcrypt hash of a plaintext password, and stores both
 // the hash and the plaintext versions in the struct
 func (p *password) Set(plaintextPassword string) error {

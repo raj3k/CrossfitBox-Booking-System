@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -58,6 +59,15 @@ func updateConfigWithVariables() (*config, error) {
 
 	// Redis config
 	flag.StringVar(&cfg.redisURL, "redis-url", os.Getenv("REDIS_URL"), "Redis URL")
+
+	// Token Expiration
+	tokenExpirationStr := os.Getenv("TOKEN_EXPIRATION")
+	duration, err := time.ParseDuration(tokenExpirationStr)
+	if err != nil {
+		return nil, err
+	}
+	cfg.tokenExpiration.durationString = tokenExpirationStr
+	cfg.tokenExpiration.duration = duration
 
 	flag.Parse()
 

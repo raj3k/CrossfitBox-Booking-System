@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"sync"
 	"time"
 
 	"crossfitbox.booking.system/internal/data"
@@ -31,7 +32,11 @@ type config struct {
 		password string
 		sender   string
 	}
-	redisURL string
+	redisURL        string
+	tokenExpiration struct {
+		durationString string
+		duration       time.Duration
+	}
 }
 
 type application struct {
@@ -40,6 +45,7 @@ type application struct {
 	models      data.Models
 	mailer      mailer.Mailer
 	redisClient *redis.Client
+	wg          sync.WaitGroup
 }
 
 func main() {

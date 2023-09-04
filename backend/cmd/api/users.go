@@ -2,10 +2,11 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
+	"time"
 
 	"crossfitbox.booking.system/internal/data"
+	"crossfitbox.booking.system/internal/tokens"
 	"crossfitbox.booking.system/internal/validator"
 )
 
@@ -54,25 +55,34 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
-	// if err != nil {
-	// 	app.serveErrorResponse(w, r, err)
-	// 	return
-	// }
+	otp, err := tokens.GenerateOTP()
+	if err != nil {
+		app.logger.PrintError(err, nil)
+	}
 
-	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				app.logger.PrintError(fmt.Errorf("%s", err), nil)
-			}
-		}()
+	err = app.storeInRedis("activation_", otp.Hash, user.ID, app.config.tokenExpiration.duration)
+	if err != nil {
+		app.logger.PrintError(err, nil)
+	}
 
-		err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
+	now := time.Now()
+	expiration := now.Add(app.config.tokenExpiration.duration)
+	exact := expiration.Format(time.RFC1123)
+
+	app.background(func() {
+		data := map[string]interface{}{
+			"token":      tokens.FormatOTP(otp.Secret),
+			"firstName":  user.FirstName,
+			"userID":     user.ID,
+			"expiration": app.config.tokenExpiration.durationString,
+			"exact":      exact,
+		}
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl", data)
 		if err != nil {
 			app.logger.PrintError(err, nil)
 		}
-
-	}()
+		app.logger.PrintInfo("Email sent", nil)
+	})
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
 	if err != nil {
