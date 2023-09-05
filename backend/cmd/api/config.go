@@ -69,6 +69,9 @@ func updateConfigWithVariables() (*config, error) {
 	cfg.tokenExpiration.durationString = tokenExpirationStr
 	cfg.tokenExpiration.duration = duration
 
+	// Frontend URL
+	flag.StringVar(&cfg.frontendURL, "frontend-url", os.Getenv("FRONTEND_URL"), "Frontend URL")
+
 	flag.Parse()
 
 	return &cfg, nil
