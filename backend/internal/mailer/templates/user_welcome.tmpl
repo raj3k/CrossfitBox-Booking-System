@@ -1,14 +1,11 @@
-{{define "subject"}}Welcome {{.firstName}} to CrossBoxFit!{{end}}
+{{define "subject"}}{{.firstName}}, welcome to CrossBoxFit!{{end}}
 
 {{define "plainBody"}}
 Hi {{.firstName}},
 
 Thanks for signing up for a CrossBoxFit account. We're exicted to have you on board!
 
-For future reference, your user ID number is {{.userID}}.
-
-Please visit TEST and input the token below to activate your account:
-
+Please visit {{.frontendURL}}/auth/activate/{{.userID}} and input the token below to activate your account:
 {{.token}}
 
 Please note that this is a one-time use token and it will expire in {{.expiration}} ({{.exact}}).
@@ -27,7 +24,8 @@ The CrossBoxFit Team
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     </head>
     <body> <p>Hi {{.firstName}},</p>
-        <p>Thanks for signing up for a CrossBoxFit account. We're excited to have you on board!</p> <p>For future reference, your user ID number is {{.userID}}.</p>
+        <p>Thanks for signing up for a CrossBoxFit account. We're excited to have you on board!</p> 
+        <p>Please visit {{.frontendURL}}/auth/activate/{{.userID}} and input the token below to activate your account:</p>
         {{.token}}
         <br>
         <strong>

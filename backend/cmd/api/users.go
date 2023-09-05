@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -71,17 +72,18 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	app.background(func() {
 		data := map[string]interface{}{
-			"token":      tokens.FormatOTP(otp.Secret),
-			"firstName":  user.FirstName,
-			"userID":     user.ID,
-			"expiration": app.config.tokenExpiration.durationString,
-			"exact":      exact,
+			"token":       tokens.FormatOTP(otp.Secret),
+			"firstName":   user.FirstName,
+			"userID":      user.ID,
+			"frontendURL": app.config.frontendURL,
+			"expiration":  app.config.tokenExpiration.durationString,
+			"exact":       exact,
 		}
 		err = app.mailer.Send(user.Email, "user_welcome.tmpl", data)
 		if err != nil {
 			app.logger.PrintError(err, nil)
 		}
-		app.logger.PrintInfo("Email sent", nil)
+		app.logger.PrintInfo(fmt.Sprintf("Email sent to %s", user.ID), nil)
 	})
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)

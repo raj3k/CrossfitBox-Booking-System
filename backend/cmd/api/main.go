@@ -37,6 +37,7 @@ type config struct {
 		durationString string
 		duration       time.Duration
 	}
+	frontendURL string
 }
 
 type application struct {
