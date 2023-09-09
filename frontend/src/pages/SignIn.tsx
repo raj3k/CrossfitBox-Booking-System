@@ -2,7 +2,7 @@ import {Button, Input} from "@mui/joy";
 
 const SignIn: React.FC = () => {
   return (
-    <div className="flex flex-row justify-center items-center w-full h-full dark:bg-zinc-800">
+    <div className="flex flex-row justify-center items-center w-full h-auto mt-12 sm:mt-24 bg-white">
       <div className="w-80 max-w-full h-full py-4 flex flex-col justify-start items-center">
         <div className="w-full py-4 grow flex flex-col justify-center items-center">
           <form className="w-full mt-4">
@@ -22,9 +22,9 @@ const SignIn: React.FC = () => {
                 required
               />
             </div>
-            <div className="flex flex-col justify-end items-end w-full mt-6">
+            <div className="flex flex-col justify-center items-center w-full mt-6">
               <Button>
-                Sign Up
+                Sign In
               </Button>
             </div>
           </form>
