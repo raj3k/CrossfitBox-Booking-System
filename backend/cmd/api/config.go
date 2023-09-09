@@ -13,7 +13,7 @@ import (
 func updateConfigWithVariables() (*config, error) {
 	var cfg config
 
-	err := godotenv.Load(".env")
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -71,6 +71,14 @@ func updateConfigWithVariables() (*config, error) {
 
 	// Frontend URL
 	flag.StringVar(&cfg.frontendURL, "frontend-url", os.Getenv("FRONTEND_URL"), "Frontend URL")
+
+	// CORS
+	// flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(s string) error {
+	// 	cfg.cors.trustedOrigins = strings.Fields(s)
+	// 	return nil
+	// })
+
+	cfg.cors.trustedOrigins = []string{"http://localhost:5173"}
 
 	flag.Parse()
 

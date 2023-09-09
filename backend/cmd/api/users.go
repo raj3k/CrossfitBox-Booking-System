@@ -10,6 +10,7 @@ import (
 	"crossfitbox.booking.system/internal/tokens"
 	"crossfitbox.booking.system/internal/validator"
 )
+// TODO: Endpoint for getting current user
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
