@@ -1,6 +1,7 @@
 import {Button, Input} from "@mui/joy";
 import {FormEvent, useState} from "react";
 import * as api from "../helpers/api";
+import toast from "react-hot-toast";
 
 const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -29,12 +30,14 @@ const SignUp: React.FC = () => {
     setPassword(text);
   };
 
-  const handleSignUpBtnClick = async (e: FormEvent)=> {
+  const handleSignUpBtnClick = async (e: FormEvent) => {
     e.preventDefault();
     try {
       await api.signup(email, firstName, lastName, password);
+      toast.success("user created!");
     } catch (error: any) {
       console.error(error);
+      toast.error(error.response.data.message);
     }
   }
 
