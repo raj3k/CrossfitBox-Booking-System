@@ -4,6 +4,7 @@ import SignIn from "../pages/SignIn.tsx";
 import SignUp from "../pages/SignUp.tsx";
 import Root from "../layouts/Root.tsx";
 import Home from "../pages/Home.tsx";
+import Activate from '../pages/Activate.tsx';
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
       {
         path: "auth/signup",
         element: <SignUp />,
+      },
+      {
+        path: "auth/activate/:uuid",
+        element: <Activate />
       },
       {
         path: "",
