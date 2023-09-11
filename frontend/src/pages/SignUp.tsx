@@ -7,6 +7,7 @@ const SignUp: React.FC = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
+  const allowConfirm = email.length > 0 && firstName.length > 0 && lastName.length > 0 && password.length > 0;
 
   const handleEmailInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value as string;
@@ -86,6 +87,7 @@ const SignUp: React.FC = () => {
                 className="w-full"
                 type="submit"
                 color="primary"
+                disabled={!allowConfirm}
               >
                 Sign Up
               </Button>
