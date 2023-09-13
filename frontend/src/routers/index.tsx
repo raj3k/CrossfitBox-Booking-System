@@ -20,7 +20,7 @@ const router = createBrowserRouter([
         element: <SignUp />,
       },
       {
-        path: "auth/activate/:uuid",
+        path: "auth/activate/:userId",
         element: <Activate />
       },
       {
