@@ -1,16 +1,18 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"crossfitbox.booking.system/internal/cookies"
 	"crossfitbox.booking.system/internal/data"
 	"crossfitbox.booking.system/internal/tokens"
 	"crossfitbox.booking.system/internal/validator"
 )
-// TODO: Endpoint for getting current user
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
@@ -88,6 +90,83 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	})
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+
+	data.ValidateEmail(v, input.Email)
+	data.ValidatePasswordPlaintext(v, input.Password)
+
+	user, err := app.models.User.GetByEmail(input.Email, true)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.invalidCredentialsResponse(w, r)
+		default:
+			app.serveErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	match, err := user.Password.Matches(input.Password)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+		return
+	}
+
+	if !match {
+		app.invalidCredentialsResponse(w, r)
+		return
+	}
+
+	var buf bytes.Buffer
+
+	err = gob.NewEncoder(&buf).Encode(user.ID)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+		return
+	}
+
+	session := buf.String()
+
+	// Store session in redis
+	err = app.storeInRedis("sessionid_", session, user.ID, app.config.secret.sessionExpiration)
+	if err != nil {
+		app.logError(r, err)
+	}
+
+	cookie := http.Cookie{
+		Name:     "sessionid",
+		Value:    session,
+		Path:     "/",
+		MaxAge:   int(app.config.secret.sessionExpiration.Seconds()),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	err = cookies.WriteEncrypted(w, cookie, app.config.secret.secretKey)
+	if err != nil {
+		app.serveErrorResponse(w, r, errors.New("something happened setting your cookie data"))
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusCreated, "Logged in successfully", nil)
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
 	}

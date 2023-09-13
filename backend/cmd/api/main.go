@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -38,6 +37,11 @@ type config struct {
 		durationString string
 		duration       time.Duration
 	}
+	secret struct {
+		HMC               string
+		secretKey         []byte
+		sessionExpiration time.Duration
+	}
 	frontendURL string
 	cors        struct {
 		trustedOrigins []string
@@ -58,11 +62,6 @@ func main() {
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	cfg, err := updateConfigWithVariables()
-
-	for i := range cfg.cors.trustedOrigins {
-		fmt.Println(cfg.cors.trustedOrigins[i])
-	}
-
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}

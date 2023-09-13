@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"flag"
 	"log"
 	"os"
@@ -77,8 +78,21 @@ func updateConfigWithVariables() (*config, error) {
 	// 	cfg.cors.trustedOrigins = strings.Fields(s)
 	// 	return nil
 	// })
-
 	cfg.cors.trustedOrigins = []string{"http://localhost:5173"}
+
+	// Secret
+	flag.StringVar(&cfg.secret.HMC, "secret-key", os.Getenv("HMC_SECRET_KEY"), "HMC Secret Key")
+	secretKey, err := hex.DecodeString(cfg.secret.HMC)
+	if err != nil {
+		return nil, err
+	}
+	cfg.secret.secretKey = secretKey
+
+	sessionDuration, err := time.ParseDuration(os.Getenv("SESSION_EXPIRATION"))
+	if err != nil {
+		return nil, err
+	}
+	cfg.secret.sessionExpiration = sessionDuration
 
 	flag.Parse()
 
