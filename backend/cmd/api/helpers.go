@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"crossfitbox.booking.system/internal/cookies"
+	"crossfitbox.booking.system/internal/data"
 	"crossfitbox.booking.system/internal/validator"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -187,4 +190,35 @@ func (app *application) background(fn func()) {
 		// Execute the arbitrary function that we passed as the parameter.
 		fn()
 	}()
+}
+
+func (app *application) extractParamsFromSession(r *http.Request) (*data.UserID, *int, error) {
+	gobEncodedValue, err := cookies.ReadEncrypted(r, "sessionid", app.config.secret.secretKey)
+	if err != nil {
+		var errorData error
+		var status int
+		switch {
+		case errors.Is(err, http.ErrNoCookie):
+			status = http.StatusUnauthorized
+			errorData = errors.New("you are not authorized to access this resource")
+		case errors.Is(err, cookies.ErrInvalidValue):
+			app.logger.PrintError(err, nil)
+			status = http.StatusBadRequest
+			errorData = errors.New("invalid cookie")
+		default:
+			status = http.StatusInternalServerError
+			errorData = errors.New("something happened getting your cookie data")
+		}
+		return nil, &status, errorData
+	}
+
+	var userID data.UserID
+
+	reader := strings.NewReader(gobEncodedValue)
+	if err := gob.NewDecoder(reader).Decode(&userID); err != nil {
+		status := http.StatusInternalServerError
+		return nil, &status, errors.New("something happened getting your cookie data")
+	}
+
+	return &userID, nil, nil
 }
