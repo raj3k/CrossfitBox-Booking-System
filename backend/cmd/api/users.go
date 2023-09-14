@@ -134,9 +134,13 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	var userID = data.UserID{
+		Id: user.ID,
+	}
+
 	var buf bytes.Buffer
 
-	err = gob.NewEncoder(&buf).Encode(user.ID)
+	err = gob.NewEncoder(&buf).Encode(&userID)
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
 		return
@@ -145,7 +149,7 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 	session := buf.String()
 
 	// Store session in redis
-	err = app.storeInRedis("sessionid_", session, user.ID, app.config.secret.sessionExpiration)
+	err = app.storeInRedis("sessionid_", session, userID.Id, app.config.secret.sessionExpiration)
 	if err != nil {
 		app.logError(r, err)
 	}
@@ -166,8 +170,44 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusCreated, "Logged in successfully", nil)
+	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) currentUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID, status, err := app.extractParamsFromSession(r)
+	if err != nil {
+		switch *status {
+		case http.StatusUnauthorized:
+			app.unauthorizedResponse(w, r, err)
+		case http.StatusBadRequest:
+			app.badRequestResponse(w, r, err)
+		case http.StatusInternalServerError:
+			app.serveErrorResponse(w, r, err)
+		default:
+			app.serveErrorResponse(w, r, errors.New("something happened and we could not fullfil your request at the moment"))
+		}
+		return
+	}
+
+	// Get session from redis
+	_, err = app.getFromRedis(fmt.Sprintf("sessionid_%s", userID.Id))
+	if err != nil {
+		app.unauthorizedResponse(w, r, errors.New("you are not authorized to access this resource"))
+		return
+	}
+
+	user, err := app.models.User.Get(userID.Id)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+		return
 	}
 }

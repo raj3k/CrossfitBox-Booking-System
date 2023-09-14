@@ -35,7 +35,7 @@ func Read(r *http.Request, name string) (string, error) {
 		return "", err
 	}
 
-	value, err := base64.RawStdEncoding.DecodeString(cookie.Value)
+	value, err := base64.URLEncoding.DecodeString(cookie.Value)
 	if err != nil {
 		return "", ErrInvalidValue
 	}
