@@ -101,6 +101,50 @@ func (um *UserModel) Insert(user *User) error {
 	return tx.Commit()
 }
 
+func (um *UserModel) Get(id uuid.UUID) (*User, error) {
+	query := `
+	SELECT u.*, p.*
+	FROM users u
+	JOIN user_profile p ON p.user_id = u.id
+	WHERE u.is_active = true AND u.id = $1`
+
+	var user User
+	var userProfile UserProfile
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := um.DB.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password.hash,
+		&user.FirstName,
+		&user.LastName,
+		&user.IsActive,
+		&user.IsStaff,
+		&user.IsSuperuser,
+		&user.Thumbnail,
+		&user.CreatedAt,
+		&userProfile.ID,
+		&userProfile.UserID,
+		&userProfile.PhoneNumber,
+		&userProfile.BirthDate,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	user.Profile = userProfile
+
+	return &user, nil
+}
+
 func (um *UserModel) GetByEmail(email string, active bool) (*User, error) {
 	query := `
 	SELECT u.*, p.*
