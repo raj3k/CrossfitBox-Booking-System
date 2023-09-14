@@ -41,6 +41,10 @@ type UserProfile struct {
 	BirthDate   types.NullTime `json:"birth_date"`
 }
 
+type UserID struct {
+	Id uuid.UUID
+}
+
 type password struct {
 	plaintext *string
 	hash      []byte
