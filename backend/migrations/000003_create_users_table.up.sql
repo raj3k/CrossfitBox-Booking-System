@@ -27,7 +27,6 @@ CREATE TABLE user_profile (
     user_id UUID NOT NULL UNIQUE,
     phone_number phone NULL,
     birth_date DATE NULL,
-    github_link TEXT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS users_detail_id_user_id ON user_profile (id, user_id);
