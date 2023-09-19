@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func updateConfigWithVariables() (*config, error) {
@@ -74,11 +76,13 @@ func updateConfigWithVariables() (*config, error) {
 	flag.StringVar(&cfg.frontendURL, "frontend-url", os.Getenv("FRONTEND_URL"), "Frontend URL")
 
 	// CORS
-	// flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(s string) error {
-	// 	cfg.cors.trustedOrigins = strings.Fields(s)
-	// 	return nil
-	// })
-	cfg.cors.trustedOrigins = []string{"http://localhost:5173"}
+	flag.Func("cors-allowed-origins", "Allowed CORS origins (space separated)", func(s string) error {
+		cfg.cors = cors.Options{
+			AllowedOrigins:   strings.Fields(s),
+			AllowCredentials: true,
+		}
+		return nil
+	})
 
 	// Secret
 	flag.StringVar(&cfg.secret.HMC, "secret-key", os.Getenv("HMC_SECRET_KEY"), "HMC Secret Key")

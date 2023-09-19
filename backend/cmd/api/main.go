@@ -12,6 +12,7 @@ import (
 	"crossfitbox.booking.system/internal/mailer"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/cors"
 )
 
 const version = "1.0.0"
@@ -43,9 +44,7 @@ type config struct {
 		sessionExpiration time.Duration
 	}
 	frontendURL string
-	cors        struct {
-		trustedOrigins []string
-	}
+	cors        cors.Options
 }
 
 type application struct {
