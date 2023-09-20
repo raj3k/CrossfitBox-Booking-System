@@ -1,12 +1,15 @@
+type UserId = string;
+type ProfileId = string;
+
 interface UserProfile {
-  id: string;
-  user_id: string;
+  id: ProfileId;
+  user_id: UserId;
   phone_number: string | null;
   birth_date: string | null;
 }
 
 interface User {
-  id: string;
+  id: UserId;
   email: string;
   first_name: string;
   last_name: string;

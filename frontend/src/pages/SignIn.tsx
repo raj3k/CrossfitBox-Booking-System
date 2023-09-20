@@ -1,15 +1,25 @@
 import {Button, Input} from "@mui/joy";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import * as api from "../helpers/api";
+import useUserStore from "../stores/v1/user";
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const userStore = useUserStore();
   const allowConfirm = email.length > 0 && password.length > 0;
+
+  useEffect(() => {
+    if (userStore.getCurrentUser()) {
+      return navigate("/", {
+        replace: true,
+      });
+    }
+  }, []);
 
   const handleEmailInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value as string;
@@ -26,7 +36,7 @@ const SignIn: React.FC = () => {
     try {
       await api.signIn(email, password);
       
-      const user = (await api.getCurrentUser()).data.user
+      const user = await userStore.fetchCurrentUser();
       
       if (user) {
         navigate("/", {
