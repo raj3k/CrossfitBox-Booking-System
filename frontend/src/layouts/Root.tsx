@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import {Outlet, useNavigate} from "react-router-dom";
 import useUserStore from "../stores/v1/user";
+import Header from "../components/Header";
 
 const Root: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Root: React.FC = () => {
       <div className="w-full min-h-full bg-white">
         <div className="w-full max-w-6xl mx-auto flex flex-row justify-center items-start sm:px-4">
           <main className="w-full max-w-full flex-grow shrink flex flex-col justify-center items-start">
+            <Header />
             <Outlet />
           </main>
         </div>

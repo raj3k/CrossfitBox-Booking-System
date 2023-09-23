@@ -121,13 +121,13 @@ const Activate: React.FC = () => {
               />
               </div>
               <div className="flex flex-col justify-center items-center w-full mt-6">
-              <Button
-                type="submit"
-                color="primary"
-                disabled={!allowActivate}
-              >
-                Activate
-              </Button>
+                <Button
+                  type="submit"
+                  color="primary"
+                  disabled={!allowActivate}
+                >
+                  Activate
+                </Button>
             </div>
             </form>
           </div>

@@ -2,6 +2,7 @@ import {Button, Input} from "@mui/joy";
 import {FormEvent, useState} from "react";
 import * as api from "../helpers/api";
 import toast from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -9,6 +10,7 @@ const SignUp: React.FC = () => {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const allowConfirm = email.length > 0 && firstName.length > 0 && lastName.length > 0 && password.length > 0;
+  const navigate = useNavigate();
 
   const handleEmailInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value as string;
@@ -34,7 +36,7 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     try {
       await api.signup(email, firstName, lastName, password);
-      toast.success("user created!");
+      toast.success("User created! Please check you email account.");
     } catch (error: any) {
       console.error(error);
       toast.error(error.response.data.message);
@@ -87,15 +89,21 @@ const SignUp: React.FC = () => {
             </div>
             <div className="flex flex-col justify-center items-center w-full mt-6">
               <Button
-                className="w-full"
                 type="submit"
                 color="primary"
                 disabled={!allowConfirm}
+                onClick={handleSignUpBtnClick}
               >
                 Sign Up
               </Button>
             </div>
           </form>
+          <p className="w-full mt-4 text-sm">
+            <span>{"Already has an account?"}</span>
+            <Link to="/auth" className="cursor-pointer ml-2 text-blue-600 hover:underline">
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
     </div>
