@@ -32,3 +32,8 @@ export function getCurrentUser() {
     withCredentials: true
   });
 }
+
+// TODO: signOut logic on backend side
+export function signOut() {
+  return console.log("signOut");
+}
