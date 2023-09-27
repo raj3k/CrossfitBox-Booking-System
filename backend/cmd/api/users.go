@@ -74,7 +74,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	exact := expiration.Format(time.RFC1123)
 
 	app.background(func() {
-		data := map[string]interface{}{
+		mailData := map[string]interface{}{
 			"token":       tokens.FormatOTP(otp.Secret),
 			"firstName":   user.FirstName,
 			"userID":      user.ID,
@@ -82,7 +82,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			"expiration":  app.config.tokenExpiration.durationString,
 			"exact":       exact,
 		}
-		err = app.mailer.Send(user.Email, "user_welcome.tmpl", data)
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl", mailData)
 		if err != nil {
 			app.logger.PrintError(err, nil)
 		}
@@ -187,7 +187,7 @@ func (app *application) currentUserHandler(w http.ResponseWriter, r *http.Reques
 		case http.StatusInternalServerError:
 			app.serveErrorResponse(w, r, err)
 		default:
-			app.serveErrorResponse(w, r, errors.New("something happened and we could not fullfil your request at the moment"))
+			app.serveErrorResponse(w, r, errors.New("something happened and we could not fulfill your request at the moment"))
 		}
 		return
 	}
