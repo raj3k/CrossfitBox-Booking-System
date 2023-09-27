@@ -1,10 +1,14 @@
 import axios from "axios";
 import { UserData } from "../types/user";
 
-const backendPath = "http://localhost:4000"
+const API_SERVER = "http://localhost:4000"
+const instance = axios.create({
+  withCredentials: true,
+  baseURL: API_SERVER,
+});
 
 export function signup(email: string, firstName: string, lastName: string, password: string) {
-  return axios.post<UserData>(backendPath + "/api/v1/users/register/", {
+  return instance.post<UserData>("/api/v1/users/register/", {
     email: email,
     first_name: firstName,
     last_name: lastName,
@@ -13,13 +17,13 @@ export function signup(email: string, firstName: string, lastName: string, passw
 }
 
 export function activateUser(userId: string, token: string) {
-  return axios.put(backendPath + `/api/v1/users/activate/${userId}`, {
+  return instance.put(`/api/v1/users/activate/${userId}`, {
     token: token.split(' ').join('')
   });
 }
 
 export function signIn(email: string, password: string) {
-  return axios.post<UserData>(backendPath + "/api/v1/users/login/", {
+  return instance.post<UserData>("/api/v1/users/login/", {
     email: email,
     password: password,
   }, {
@@ -28,12 +32,11 @@ export function signIn(email: string, password: string) {
 }
 
 export function getCurrentUser() {
-  return axios.get<UserData>(backendPath + "/api/v1/users/current-user", {
+  return instance.get<UserData>("/api/v1/users/current-user", {
     withCredentials: true
   });
 }
 
-// TODO: signOut logic on backend side
 export function signOut() {
-  return console.log("signOut");
+  return instance.post("/api/v1/users/logout");
 }

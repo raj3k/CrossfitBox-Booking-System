@@ -27,6 +27,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/api/v1/users/login", app.loginUserHandler)
 	router.HandlerFunc(http.MethodPut, "/api/v1/users/activate/:id/", app.activateUserHandler)
 	router.HandlerFunc(http.MethodGet, "/api/v1/users/current-user", app.currentUserHandler)
+	router.HandlerFunc(http.MethodPost, "/api/v1/users/logout", app.logoutUserHandler)
 
 	return app.recoverPanic(app.enableCORS(router))
 }

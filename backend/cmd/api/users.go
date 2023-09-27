@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -206,6 +207,49 @@ func (app *application) currentUserHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (app *application) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID, status, err := app.extractParamsFromSession(r)
+	if err != nil {
+		switch *status {
+		case http.StatusUnauthorized:
+			app.unauthorizedResponse(w, r, err)
+		case http.StatusBadRequest:
+			app.badRequestResponse(w, r, err)
+		case http.StatusInternalServerError:
+			app.serveErrorResponse(w, r, err)
+		default:
+			app.serveErrorResponse(w, r, errors.New("something happened and we could not fulfill your request at the moment"))
+		}
+		return
+	}
+
+	// Get session from redis
+	_, err = app.getFromRedis(fmt.Sprintf("sessionid_%s", userID.Id))
+	if err != nil {
+		app.unauthorizedResponse(w, r, errors.New("you are not authorized to access this resource"))
+		return
+	}
+
+	ctx := context.Background()
+	_, err = app.redisClient.Del(ctx, fmt.Sprintf("sessionid_%s", userID.Id)).Result()
+	if err != nil {
+		app.serveErrorResponse(w, r, errors.New("something happened decoding cookie data"))
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "sessionid",
+		Value:   "",
+		Expires: time.Now(),
+	})
+
+	err = app.writeJSON(w, http.StatusOK, "You have successfully logged out", nil)
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
 		return
