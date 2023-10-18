@@ -2,7 +2,7 @@ import {Button, Input} from "@mui/joy";
 import {FormEvent, useState} from "react";
 import * as api from "../helpers/api";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -10,7 +10,7 @@ const SignUp: React.FC = () => {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const allowConfirm = email.length > 0 && firstName.length > 0 && lastName.length > 0 && password.length > 0;
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handleEmailInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value as string;
